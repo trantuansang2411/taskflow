@@ -1,0 +1,56 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: todo_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-todo_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres123}
+      JWT_SECRET: ${JWT_SECRET:-changeme_jwt_secret}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-5m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-changeme_refresh_secret}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-10}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - todo_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: todo_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-todo_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-todo_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - todo_network
+
+volumes:
+  postgres_data:
+
+networks:
+  todo_network:
+    driver: bridge
