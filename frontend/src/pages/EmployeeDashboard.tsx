@@ -26,7 +26,7 @@ export const EmployeeDashboard: React.FC = () => {
       if (activeSearch) params.search = activeSearch;
 
       const res = await todoApi.getAll(params);
-      
+
       // If we are on a page that no longer exists
       if (res.data.todos.length === 0 && page > 1) {
         setPage(Math.max(1, res.data.totalPages));
@@ -58,8 +58,8 @@ export const EmployeeDashboard: React.FC = () => {
     } catch { /* non-critical */ }
   }, []);
 
-  useEffect(() => { 
-    fetchTodos(); 
+  useEffect(() => {
+    fetchTodos();
     fetchStats();
   }, [fetchTodos, fetchStats]);
 
